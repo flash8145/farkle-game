@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "axios": "^1.12.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.22",
+    "lucide-react": "^0.545.0",
+    "tailwind-merge": "^3.3.1"
+  }
+}

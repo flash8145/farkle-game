@@ -1,0 +1,11 @@
+C:\Users\taha\source\repos\farkle\Farkle.Core\bin\Debug\net8.0\FarkleGame.Core.deps.json
+C:\Users\taha\source\repos\farkle\Farkle.Core\bin\Debug\net8.0\FarkleGame.Core.dll
+C:\Users\taha\source\repos\farkle\Farkle.Core\bin\Debug\net8.0\FarkleGame.Core.pdb
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.AssemblyInfoInputs.cache
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.AssemblyInfo.cs
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.csproj.CoreCompileInputs.cache
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.dll
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\refint\FarkleGame.Core.dll
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.pdb
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\ref\FarkleGame.Core.dll
