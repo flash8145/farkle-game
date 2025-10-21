@@ -89,7 +89,7 @@ export default function CreateGamePage() {
           <CardHeader>
             <CardTitle>Game Setup</CardTitle>
             <CardDescription>
-              Enter your name to create a new game. You'll receive a game code to share with your friend.
+              Enter your name to create a new game. You&apos;ll receive a game code to share with your friend.
             </CardDescription>
           </CardHeader>
 

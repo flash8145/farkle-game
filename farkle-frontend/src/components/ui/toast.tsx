@@ -218,5 +218,4 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
 // EXPORTS
 // ============================================
 
-export { ToastProvider, useToast };
 export default ToastProvider;

@@ -241,9 +241,9 @@ function RulesModal({ onClose }: { onClose: () => void }) {
               <li>Roll all 6 dice on your turn</li>
               <li>Set aside scoring dice</li>
               <li>Choose to bank points or roll remaining dice</li>
-              <li>If you roll no scoring dice, you "Farkle" and lose turn points</li>
+              <li>If you roll no scoring dice, you &quot;Farkle&quot; and lose turn points</li>
               <li>If all dice score (Hot Dice), roll all 6 again!</li>
-              <li>Must score 500+ points to get "on the board"</li>
+              <li>Must score 500+ points to get &quot;on the board&quot;</li>
             </ol>
           </div>
 

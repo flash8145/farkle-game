@@ -125,7 +125,7 @@ function DefaultErrorFallback({ error, errorInfo, resetError }: ErrorFallbackPro
             Oops! Something went wrong
           </h1>
           <p className="text-gray-400">
-            We're sorry for the inconvenience. The application encountered an unexpected error.
+            We&apos;re sorry for the inconvenience. The application encountered an unexpected error.
           </p>
         </div>
 

@@ -274,6 +274,8 @@ export interface GameStateResponse {
   lastActivityAt: string;
 }
 
+// ... (keep all previous types)
+
 // ============================================
 // GAME RULES & CONSTANTS
 // ============================================
@@ -283,7 +285,7 @@ export interface GameStateResponse {
  */
 export const GameRules = {
   TOTAL_DICE: 6,
-  WINNING_SCORE: 10000,
+  WINNING_SCORE: 5000, // ✅ UPDATED: Changed from 10,000 to 5,000
   MINIMUM_SCORE_TO_GET_ON_BOARD: 500,
   MAX_PLAYERS: 2,
   
@@ -316,6 +318,7 @@ export interface DiceAnimationState {
   isShaking: boolean;
   scoringIndices: number[];
   isHotDice: boolean;
+  diceValues: number[];
 }
 
 /**
@@ -360,7 +363,7 @@ export type GameAction =
 export interface ApiError {
   error: string;
   statusCode?: number;
-  details?: any;
+  details?: unknown;
 }
 
 /**
@@ -466,7 +469,7 @@ export enum ConnectionState {
  */
 export interface SignalRMessage {
   type: 'GameUpdated' | 'PlayerJoined' | 'PlayerLeft' | 'TurnChanged' | 'GameEnded';
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 

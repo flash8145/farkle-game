@@ -50,7 +50,7 @@ const ENABLE_DEBUG_LOGGING = true;
 /**
  * Logs API request details
  */
-function logRequest(method: string, url: string, body?: any) {
+function logRequest(method: string, url: string, body?: unknown) {
   if (!ENABLE_DEBUG_LOGGING) return;
   
   console.group(`🚀 API Request: ${method} ${url}`);
@@ -65,7 +65,7 @@ function logRequest(method: string, url: string, body?: any) {
 /**
  * Logs API response details
  */
-function logResponse(method: string, url: string, status: number, data: any) {
+function logResponse(method: string, url: string, status: number, data: unknown) {
   if (!ENABLE_DEBUG_LOGGING) return;
   
   console.group(`✅ API Response: ${method} ${url}`);
@@ -78,22 +78,25 @@ function logResponse(method: string, url: string, status: number, data: any) {
 /**
  * Logs API error details
  */
-function logError(method: string, url: string, error: any) {
+function logError(method: string, url: string, error: unknown) {
   console.group(`❌ API Error: ${method} ${url}`);
-  console.error('🔴 Error Type:', error.constructor.name);
+  // Safely infer error type
+  const errorType = Object.prototype.toString.call(error);
+  console.error('🔴 Error Type:', errorType);
   console.error('📍 Full URL:', url);
   console.error('⏰ Timestamp:', new Date().toISOString());
   
-  if (error.statusCode) {
-    console.error('📊 Status Code:', error.statusCode);
-  }
-  
-  if (error.error) {
-    console.error('💬 Error Message:', error.error);
-  }
-  
-  if (error.details) {
-    console.error('📋 Error Details:', error.details);
+  if (typeof error === 'object' && error !== null) {
+    const errObj = error as Record<string, unknown>;
+    if (typeof errObj.statusCode === 'number') {
+      console.error('📊 Status Code:', errObj.statusCode);
+    }
+    if (typeof errObj.error === 'string') {
+      console.error('💬 Error Message:', errObj.error);
+    }
+    if (errObj.details !== undefined) {
+      console.error('📋 Error Details:', errObj.details);
+    }
   }
   
   console.error('🔍 Full Error Object:', error);
@@ -127,7 +130,7 @@ async function apiRequest<T>(
     });
 
     // Try to parse response body
-    let data: any = null;
+    let data: unknown = null;
     const contentType = response.headers.get('content-type');
     
     if (contentType && contentType.includes('application/json')) {
@@ -146,8 +149,12 @@ async function apiRequest<T>(
 
     // Handle non-OK responses
     if (!response.ok) {
+      const dataObj = (typeof data === 'object' && data !== null) ? (data as Record<string, unknown>) : undefined;
+      const errFromData = typeof dataObj?.error === 'string' ? (dataObj!.error as string)
+        : typeof dataObj?.title === 'string' ? (dataObj!.title as string)
+        : undefined;
       const error: ApiError = {
-        error: data?.error || data?.title || response.statusText || 'An error occurred',
+        error: errFromData || response.statusText || 'An error occurred',
         statusCode: response.status,
         details: data,
       };
@@ -407,7 +414,7 @@ export async function testApiConnection(): Promise<{
   success: boolean;
   apiUrl: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }> {
   console.group('🧪 Testing API Connection');
   console.log('📍 API Base URL:', API_BASE_URL);
@@ -565,7 +572,7 @@ export async function retryRequest<T>(
 // EXPORTS
 // ============================================
 
-export default {
+const apiClient = {
   createGame,
   createAIGame,
   joinGame,
@@ -585,3 +592,5 @@ export default {
   GameStatePoller,
   retryRequest,
 };
+
+export default apiClient;

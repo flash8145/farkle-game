@@ -1,222 +1,319 @@
 'use client';
 
 import * as React from 'react';
-import { Dice, DiceGroup, DicePlaceholder } from './Dice';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { DiceValue } from '@/types/game';
 import { useGame } from '@/contexts/GameContext';
-import { DiceValue, ScoringCombination } from '@/types/game';
+import { useToast } from '@/components/ui/toast';
+import { GameStatus } from '@/types/game';
 
 // ============================================
-// DICE AREA COMPONENT
+// DICE COMPONENT
 // ============================================
 
-export const DiceArea: React.FC = () => {
-  const { gameState, currentPlayerId, rollDice, bankPoints, isMyTurn, diceAnimationState, isLoading } = useGame();
+interface DiceProps {
+  value: DiceValue;
+  isRolling?: boolean;
+  isScoring?: boolean;
+  isHotDice?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
 
-  const [lastRoll, setLastRoll] = React.useState<number[]>([]);
-  const [currentTurnScore, setCurrentTurnScore] = React.useState(0);
-  const [scoringCombinations, setScoringCombinations] = React.useState<ScoringCombination[]>([]);
-  const [message, setMessage] = React.useState<string>('');
-
-  const currentPlayer = gameState?.players.find(p => p.playerId === currentPlayerId);
-  const canRoll = isMyTurn() && !isLoading;
-  const canBank = isMyTurn() && currentPlayer && currentPlayer.currentTurnScore > 0 && !isLoading;
-
-  const handleRoll = async () => {
-    try {
-      await rollDice();
-      // Game context will update state automatically
-    } catch (error) {
-      console.error('Roll dice error:', error);
-    }
+const Dice: React.FC<DiceProps> = ({
+  value,
+  isRolling = false,
+  isScoring = false,
+  isHotDice = false,
+  size = 'lg',
+}) => {
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-20 h-20',
   };
 
-  const handleBank = async () => {
-    try {
-      await bankPoints();
-      setLastRoll([]);
-      setCurrentTurnScore(0);
-      setScoringCombinations([]);
-      setMessage('');
-    } catch (error) {
-      console.error('Bank points error:', error);
-    }
+  const dotSizeClasses = {
+    sm: 'w-2 h-2',
+    md: 'w-2.5 h-2.5',
+    lg: 'w-3 h-3',
   };
-
-  // Update local state when game state changes
-  React.useEffect(() => {
-    if (currentPlayer) {
-      setCurrentTurnScore(currentPlayer.currentTurnScore);
-    }
-  }, [currentPlayer]);
-
-  const availableDice = gameState?.availableDice || 6;
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-center">
-          {isMyTurn() ? (
-            <span className="text-gradient-purple">Your Turn!</span>
-          ) : (
-            <span className="text-muted-foreground">Opponent's Turn</span>
-          )}
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Current Turn Score Display */}
-        {currentTurnScore > 0 && (
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-1">Turn Score</p>
-            <p className="text-4xl font-bold text-gradient-gold animate-pulse">
-              {currentTurnScore} pts
-            </p>
-          </div>
-        )}
-
-        {/* Dice Display */}
-        <div className="min-h-[120px] flex items-center justify-center">
-          {lastRoll.length > 0 ? (
-            <DiceGroup>
-              {lastRoll.map((value, index) => (
-                <Dice
-                  key={index}
-                  value={value as DiceValue}
-                  isRolling={diceAnimationState.isRolling}
-                  isScoring={diceAnimationState.scoringIndices.includes(index)}
-                  isHotDice={diceAnimationState.isHotDice}
-                  disabled={!isMyTurn()}
-                  size="lg"
-                />
-              ))}
-            </DiceGroup>
-          ) : (
-            <DiceGroup>
-              {Array.from({ length: availableDice }).map((_, index) => (
-                <DicePlaceholder key={index} size="lg" />
-              ))}
-            </DiceGroup>
-          )}
-        </div>
-
-        {/* Scoring Combinations */}
-        {scoringCombinations.length > 0 && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg p-4">
-            <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">
-              Scoring Combinations:
-            </p>
-            <ul className="space-y-1">
-              {scoringCombinations.map((combo, index) => (
-                <li key={index} className="text-sm text-green-700 dark:text-green-300">
-                  {combo.description} - <span className="font-bold">{combo.points} pts</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Message Display */}
-        {message && (
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {message}
-            </p>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleRoll}
-            disabled={!canRoll}
-            isLoading={isLoading && diceAnimationState.isRolling}
-            className="flex-1"
-          >
-            {isLoading && diceAnimationState.isRolling ? (
-              'Rolling...'
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 9a1 1 0 000 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V8a1 1 0 10-2 0v1H8z" />
-                </svg>
-                Roll Dice ({availableDice})
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant="success"
-            size="lg"
-            onClick={handleBank}
-            disabled={!canBank}
-            isLoading={isLoading && !diceAnimationState.isRolling}
-            className="flex-1"
-          >
-            {isLoading && !diceAnimationState.isRolling ? (
-              'Banking...'
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                Bank Points
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Available Dice Indicator */}
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-          </svg>
-          <span>
-            {availableDice} {availableDice === 1 ? 'die' : 'dice'} available
-          </span>
-        </div>
-
-        {/* Hot Dice Notification */}
-        {diceAnimationState.isHotDice && (
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg p-4 text-center animate-bounce-in">
-            <p className="text-lg font-bold flex items-center justify-center gap-2">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-              </svg>
-              HOT DICE! Roll all 6 again!
-            </p>
-          </div>
-        )}
-
-        {/* Not Your Turn Message */}
-        {!isMyTurn() && gameState?.currentPlayer && (
-          <div className="text-center bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Waiting for <span className="font-semibold text-purple-600 dark:text-purple-400">
-                {gameState.currentPlayer.playerName}
-              </span> to finish their turn...
-            </p>
-          </div>
-        )}
-
-        {/* Game Instructions */}
-        {!currentPlayer?.isOnBoard && currentTurnScore > 0 && currentTurnScore < 500 && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 rounded-lg p-3">
-            <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">
-              ⚠️ You need at least 500 points to get on the board!
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div
+      className={`
+        ${sizeClasses[size]} 
+        rounded-xl border-2 bg-white dark:bg-slate-800 
+        flex items-center justify-center p-3
+        transition-all duration-300
+        ${isRolling ? 'animate-dice-roll' : ''}
+        ${isScoring ? 'ring-4 ring-green-500/50 border-green-500' : 'border-slate-600'}
+        ${isHotDice ? 'ring-4 ring-amber-500 border-amber-500 animate-hot-pulse' : ''}
+      `}
+    >
+      <DiceDots value={value} size={dotSizeClasses[size]} />
+    </div>
   );
 };
 
 // ============================================
-// EXPORTS
+// DICE DOTS COMPONENT
 // ============================================
 
-export default DiceArea;
+interface DiceDotsProps {
+  value: DiceValue;
+  size: string;
+}
+
+const DiceDots: React.FC<DiceDotsProps> = ({ value, size }) => {
+  const dotClass = `${size} rounded-full bg-slate-900 dark:bg-white`;
+
+  const layouts: Record<DiceValue, React.ReactNode> = {
+    1: (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className={dotClass} />
+      </div>
+    ),
+    2: (
+      <div className="w-full h-full flex items-center justify-between px-2">
+        <div className={dotClass} />
+        <div className={dotClass} />
+      </div>
+    ),
+    3: (
+      <div className="w-full h-full flex flex-col justify-between py-1">
+        <div className="flex justify-start pl-2">
+          <div className={dotClass} />
+        </div>
+        <div className="flex justify-center">
+          <div className={dotClass} />
+        </div>
+        <div className="flex justify-end pr-2">
+          <div className={dotClass} />
+        </div>
+      </div>
+    ),
+    4: (
+      <div className="w-full h-full grid grid-cols-2 gap-2 p-2">
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+      </div>
+    ),
+    5: (
+      <div className="w-full h-full grid grid-cols-2 gap-2 p-2">
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className="col-span-2 flex justify-center">
+          <div className={dotClass} />
+        </div>
+        <div className={dotClass} />
+        <div className={dotClass} />
+      </div>
+    ),
+    6: (
+      <div className="w-full h-full grid grid-cols-2 gap-2 p-2">
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+        <div className={dotClass} />
+      </div>
+    ),
+  };
+
+  return layouts[value];
+};
+
+// ============================================
+// DICE PLACEHOLDER
+// ============================================
+
+const DicePlaceholder: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'lg' }) => {
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-20 h-20',
+  };
+
+  return (
+    <div
+      className={`
+        ${sizeClasses[size]} 
+        rounded-xl border-2 border-dashed border-slate-600 
+        bg-slate-800/30
+      `}
+    />
+  );
+};
+
+// ============================================
+// MAIN DICE AREA COMPONENT
+// ============================================
+
+export default function DiceArea() {
+  const { 
+    gameState, 
+    rollDice, 
+    bankPoints, 
+    isMyTurn,
+    diceAnimationState,
+    isLoading 
+  } = useGame();
+  const { success, error: showError } = useToast();
+
+  // Get current player
+  const currentPlayer = gameState?.players.find(p => p.isCurrentTurn);
+  const myTurnScore = currentPlayer?.currentTurnScore || 0;
+  const availableDice = gameState?.availableDice || 6;
+
+  // Get dice values from animation state or use placeholders
+  const hasRolledDice = diceAnimationState.diceValues.length > 0;
+  const diceValues = hasRolledDice 
+    ? diceAnimationState.diceValues 
+    : Array(availableDice).fill(1);
+  
+  // Use actual rolled dice count, not availableDice when we have rolled dice
+  const diceToRender = hasRolledDice ? diceAnimationState.diceValues.length : availableDice;
+
+  // Debug logging
+  console.log('🎲 DiceArea Render:', {
+    availableDice,
+    hasRolledDice,
+    diceValuesLength: diceAnimationState.diceValues.length,
+    diceToRender,
+    diceValues,
+    animationState: diceAnimationState,
+    isMyTurn: isMyTurn(),
+  });
+
+  const handleRoll = async () => {
+    if (!isMyTurn()) {
+      showError('Not your turn!');
+      return;
+    }
+
+    try {
+      await rollDice(availableDice);
+      success('Dice rolled!');
+    } catch (err) {
+      console.error('Roll error:', err);
+      showError('Failed to roll dice');
+    }
+  };
+
+  const handleBank = async () => {
+    if (!isMyTurn()) {
+      showError('Not your turn!');
+      return;
+    }
+
+    if (myTurnScore === 0) {
+      showError('No points to bank!');
+      return;
+    }
+
+    try {
+      await bankPoints();
+      success(`Banked ${myTurnScore} points!`);
+    } catch (err) {
+      console.error('Bank error:', err);
+      showError('Failed to bank points');
+    }
+  };
+
+  const canRoll = isMyTurn() && gameState?.status === GameStatus.InProgress && !isLoading;
+  const canBank = isMyTurn() && myTurnScore > 0 && !isLoading;
+
+  return (
+    <div className="glass-card rounded-3xl p-6 md:p-8 space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+          {isMyTurn() ? "Your Turn!" : "Opponent's Turn"}
+        </h2>
+        {myTurnScore > 0 && (
+          <p className="text-4xl md:text-5xl font-black text-gradient-gold animate-pulse">
+            +{myTurnScore} pts
+          </p>
+        )}
+      </div>
+
+      {/* Dice Display */}
+      <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap min-h-[100px]">
+        {diceToRender > 0 ? (
+          Array.from({ length: diceToRender }).map((_, index) => {
+            const diceValue = (diceValues[index] || 1) as DiceValue;
+            return (
+              <Dice
+                key={index}
+                value={diceValue}
+                isRolling={diceAnimationState.isRolling}
+                isScoring={diceAnimationState.scoringIndices.includes(index)}
+                isHotDice={diceAnimationState.isHotDice}
+                size="lg"
+              />
+            );
+          })
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-lg">No dice available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Scoring Info */}
+      {diceAnimationState.scoringIndices.length > 0 && !diceAnimationState.isRolling && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center animate-fade-in">
+          <p className="text-green-400 font-semibold">
+            ✅ {diceAnimationState.scoringIndices.length} scoring dice!
+          </p>
+        </div>
+      )}
+
+      {/* Hot Dice Indicator */}
+      {diceAnimationState.isHotDice && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center animate-pulse">
+          <p className="text-amber-400 font-semibold">
+            🔥 HOT DICE! All dice scored - Roll again with 6 dice!
+          </p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      {isMyTurn() && (
+        <div className="flex gap-3 md:gap-4">
+          <button
+            onClick={handleRoll}
+            disabled={!canRoll || diceAnimationState.isRolling}
+            className="btn-premium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {diceAnimationState.isRolling ? (
+              <>
+                <div className="spinner w-5 h-5 mr-2" />
+                Rolling...
+              </>
+            ) : (
+              <>
+                🎲 Roll Dice ({availableDice})
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleBank}
+            disabled={!canBank || diceAnimationState.isRolling}
+            className="btn-premium bg-gradient-to-r from-green-600 to-emerald-600 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            💰 Bank Points
+          </button>
+        </div>
+      )}
+
+      {/* Available Dice Indicator */}
+      <div className="text-center text-sm text-gray-400">
+        🎲 {availableDice} dice available
+      </div>
+    </div>
+  );
+}

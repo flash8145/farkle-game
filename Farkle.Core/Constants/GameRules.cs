@@ -11,9 +11,9 @@
         public const int TotalDice = 6;
 
         /// <summary>
-        /// Points needed to win the game
+        /// Points needed to win the game (UPDATED: Changed from 10,000 to 5,000)
         /// </summary>
-        public const int WinningScore = 10000;
+        public const int WinningScore = 5000;
 
         /// <summary>
         /// Minimum score required to get on the board (first scoring turn)

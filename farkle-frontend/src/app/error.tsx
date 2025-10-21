@@ -49,7 +49,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
             Something Went Wrong
           </h1>
           <p className="text-gray-400 text-lg">
-            Don't worry, we're on it! Try refreshing the page.
+            Don&apos;t worry, we&apos;re on it! Try refreshing the page.
           </p>
         </div>
 

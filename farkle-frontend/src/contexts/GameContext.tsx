@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+
 import {
   GameState,
   GameAction,
@@ -12,10 +13,13 @@ import {
   RollDiceRequest,
   BankPointsRequest,
   AITurnRequest,
+  AITurnResponse,
   StoredGameSession,
   LocalStorageKeys,
   GameStatus,
+  Player,
 } from '@/types/game';
+
 import * as api from '@/lib/api-client';
 
 // ============================================
@@ -27,6 +31,7 @@ const initialDiceAnimationState: DiceAnimationState = {
   isShaking: false,
   scoringIndices: [],
   isHotDice: false,
+  diceValues: [],
 };
 
 const initialState: GameContextState = {
@@ -99,14 +104,14 @@ interface GameContextType extends GameContextState {
   joinGame: (gameCode: string, playerName: string) => Promise<void>;
   rollDice: (numberOfDice?: number) => Promise<void>;
   bankPoints: () => Promise<void>;
-  triggerAITurn: (aiPlayerId: string) => Promise<void>;
+  triggerAITurn: (aiPlayerId: string) => Promise<AITurnResponse>;
   refreshGameState: () => Promise<void>;
   leaveGame: () => Promise<void>;
   resetGame: () => void;
   
   // Utility Functions
   isMyTurn: () => boolean;
-  getOpponent: () => any | null;
+  getOpponent: () => Player | null;
   saveGameSession: () => void;
   loadGameSession: () => StoredGameSession | null;
 }
@@ -260,17 +265,29 @@ export function GameProvider({ children }: GameProviderProps) {
 
       const response = await api.rollDice(request);
 
+      console.log('🎲 ROLL RESPONSE:', JSON.stringify(response, null, 2));
+      console.log('🎲 Dice Values:', response.roll?.diceValues);
+      console.log('🎲 Scoring Indices:', response.roll?.scoringDiceIndices);
+      console.log('🎲 Is Hot Dice:', response.roll?.isHotDice);
+
       // Update dice animation with results
       if (response.roll) {
+        const animationPayload = {
+          isRolling: false,
+          isShaking: false,
+          scoringIndices: response.roll.scoringDiceIndices,
+          isHotDice: response.roll.isHotDice,
+          diceValues: response.roll.diceValues,
+        };
+        
+        console.log('🎲 Dispatching Animation Payload:', animationPayload);
+        
         dispatch({
           type: 'UPDATE_DICE_ANIMATION',
-          payload: {
-            isRolling: false,
-            isShaking: false,
-            scoringIndices: response.roll.scoringDiceIndices,
-            isHotDice: response.roll.isHotDice,
-          },
+          payload: animationPayload,
         });
+      } else {
+        console.error('❌ No roll data in response!');
       }
 
       // Refresh game state
@@ -325,10 +342,10 @@ export function GameProvider({ children }: GameProviderProps) {
     }
   };
 
-  const triggerAITurn = async (aiPlayerId: string) => {
+  const triggerAITurn = async (aiPlayerId: string): Promise<AITurnResponse> => {
     if (!state.gameState) {
       dispatch({ type: 'SET_ERROR', payload: 'Game not initialized' });
-      return;
+      throw new Error('Game not initialized');
     }
 
     try {
@@ -349,6 +366,8 @@ export function GameProvider({ children }: GameProviderProps) {
         // Fallback: refresh game state
         await refreshGameState(state.gameState.gameId);
       }
+
+      return response;
     } catch (error) {
       const errorMsg = api.formatApiError(error);
       dispatch({ type: 'SET_ERROR', payload: errorMsg });
@@ -412,7 +431,7 @@ export function GameProvider({ children }: GameProviderProps) {
     return currentPlayer?.isCurrentTurn || false;
   };
 
-  const getOpponent = () => {
+  const getOpponent = (): Player | null => {
     if (!state.gameState || !state.currentPlayerId) {
       return null;
     }

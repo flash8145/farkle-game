@@ -113,6 +113,11 @@ export interface FormFieldProps {
   htmlFor?: string;
 }
 
+// Props we may inject into child inputs when cloning
+interface ClonableChildProps extends React.AriaAttributes {
+  id?: string;
+}
+
 export const FormField: React.FC<FormFieldProps> = ({
   label,
   required = false,
@@ -142,7 +147,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       <div className="w-full">
         {React.isValidElement(children)
-          ? React.cloneElement(children as React.ReactElement<any>, {
+          ? React.cloneElement(children as React.ReactElement<ClonableChildProps>, {
               id: inputId,
               'aria-invalid': error ? 'true' : 'false',
               'aria-describedby': error

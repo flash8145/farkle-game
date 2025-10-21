@@ -9,3 +9,4 @@ C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.d
 C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\refint\FarkleGame.Core.dll
 C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.pdb
 C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\ref\FarkleGame.Core.dll
+C:\Users\taha\source\repos\farkle\Farkle.Core\obj\Debug\net8.0\FarkleGame.Core.sourcelink.json

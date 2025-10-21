@@ -4,7 +4,8 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/contexts/GameContext';
 import { useToast } from '@/components/ui/toast';
-import { GameStatus } from '@/types/game';
+import { GameStatus, Player } from '@/types/game';
+
 import DiceArea from '@/components/game/DiceArea';
 import Scoreboard from '@/components/game/Scoreboard';
 import GameControls from '@/components/game/GameControls';
@@ -22,7 +23,6 @@ export default function GamePage() {
     isLoading, 
     error,
     refreshGameState,
-    triggerAITurn,
     getOpponent,
     isMyTurn
   } = useGame();
@@ -73,25 +73,7 @@ export default function GamePage() {
     };
   }, [gameState, refreshGameState]);
 
-  // ============================================
-  // AUTO-TRIGGER AI TURN
-  // ============================================
-  React.useEffect(() => {
-    if (!isAITurn || !opponent || !gameState) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        info(`AI is thinking...`);
-        await triggerAITurn(opponent.playerId);
-        success('AI completed turn');
-      } catch (err) {
-        console.error('AI turn error:', err);
-        showError('AI turn failed');
-      }
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [isAITurn, opponent, gameState, triggerAITurn, success, showError, info]);
+  // AI turn is now handled in GameControls component
 
   // ============================================
   // DETECT GAME COMPLETION
@@ -280,7 +262,8 @@ export default function GamePage() {
                 <div className="glass-card px-6 py-3 rounded-full">
                   <p className="text-gray-400 font-semibold flex items-center gap-2">
                     <span className="w-3 h-3 bg-gray-500 rounded-full" />
-                    {opponent?.playerName || 'Opponent'}'s Turn
+                    {opponent?.playerName || 'Opponent'}&apos;s Turn
+
                   </p>
                 </div>
               )}
@@ -310,7 +293,7 @@ export default function GamePage() {
 // ============================================
 
 interface WinnerModalProps {
-  winner: any;
+  winner: Player;
   isCurrentPlayer: boolean;
   onClose: () => void;
   onPlayAgain: () => void;
