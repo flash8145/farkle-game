@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { GameProvider } from "@/contexts/GameContext";
-import { ToastProvider } from "@/components/ui/toast";
+import { ToastProvider } from "@/components/ui/toast-notification";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { validateEnv, logEnvConfig } from "@/lib/env";
@@ -57,14 +58,16 @@ export default function RootLayout({
 
         {/* Main Content with Providers */}
         <ToastProvider>
-          <GameProvider>
-            <div className="relative z-0">
-              {/* Page Transition Wrapper */}
-              <div className="min-h-screen">
-                {children}
+          <AuthProvider>
+            <GameProvider>
+              <div className="relative z-0">
+                {/* Page Transition Wrapper */}
+                <div className="min-h-screen">
+                  {children}
+                </div>
               </div>
-            </div>
-          </GameProvider>
+            </GameProvider>
+          </AuthProvider>
         </ToastProvider>
 
         {/* Global Loading Indicator (Optional) */}

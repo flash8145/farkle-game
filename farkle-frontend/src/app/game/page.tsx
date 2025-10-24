@@ -3,8 +3,9 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
-import { GameStatus, Player } from '@/types/game';
+import { useToast } from '@/components/ui/toast-notification';
+import { useAuth } from '@/contexts/AuthContext';
+import { GameStatus, Player, isGameCompleted } from '@/types/game';
 
 import DiceArea from '@/components/game/DiceArea';
 import Scoreboard from '@/components/game/Scoreboard';
@@ -26,7 +27,10 @@ export default function GamePage() {
     getOpponent,
     isMyTurn
   } = useGame();
-  const { success, error: showError, info } = useToast();
+  const { addToast } = useToast();
+  const { isAuthenticated, updateGameStats } = useAuth();
+  
+  const [hasUpdatedStats, setHasUpdatedStats] = React.useState(false);
 
   const [showWinnerModal, setShowWinnerModal] = React.useState(false);
   const [showConfetti, setShowConfetti] = React.useState(false);
@@ -45,10 +49,10 @@ export default function GamePage() {
   // ============================================
   React.useEffect(() => {
     if (!gameState && !isLoading) {
-      showError('No active game found');
+      addToast({ type: 'error', title: 'No Game Found', message: 'No active game found. Please create or join a game.' });
       router.push('/');
     }
-  }, [gameState, isLoading, router, showError]);
+  }, [gameState, isLoading, router, addToast]);
 
   // ============================================
   // POLLING FOR GAME STATE UPDATES
@@ -76,7 +80,7 @@ export default function GamePage() {
   // AI turn is now handled in GameControls component
 
   // ============================================
-  // DETECT GAME COMPLETION
+  // DETECT GAME COMPLETION AND UPDATE STATS
   // ============================================
   React.useEffect(() => {
     if (!gameState) return;
@@ -88,6 +92,24 @@ export default function GamePage() {
     ) {
       setLastGameStatus(GameStatus.Completed);
       
+      // Update user statistics if authenticated and not already updated
+      if (isAuthenticated && !hasUpdatedStats) {
+        const currentPlayer = gameState.players.find(p => p.playerId === currentPlayerId);
+        if (currentPlayer) {
+          const won = gameState.winner?.playerId === currentPlayerId;
+          const score = currentPlayer.totalScore;
+          
+          updateGameStats(won, score).then((success) => {
+            if (success) {
+              setHasUpdatedStats(true);
+              console.log('Game statistics updated successfully');
+            } else {
+              console.error('Failed to update game statistics');
+            }
+          });
+        }
+      }
+      
       // Show winner modal after a short delay
       setTimeout(() => {
         setShowWinnerModal(true);
@@ -95,13 +117,13 @@ export default function GamePage() {
         // Show confetti if current player won
         if (gameState.winner?.playerId === currentPlayerId) {
           setShowConfetti(true);
-          success('🎉 Congratulations! You won!');
+          addToast({ type: 'success', title: 'Victory!', message: '🎉 Congratulations! You won!' });
         }
       }, 1000);
     } else if (gameState.status !== GameStatus.Completed) {
       setLastGameStatus(gameState.status);
     }
-  }, [gameState, lastGameStatus, currentPlayerId, success]);
+  }, [gameState, lastGameStatus, currentPlayerId, addToast, isAuthenticated, hasUpdatedStats, updateGameStats]);
 
   // ============================================
   // LOADING STATE
@@ -175,7 +197,7 @@ export default function GamePage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(gameState.gameCode);
-                  success('Game code copied!');
+                  addToast({ type: 'success', title: 'Copied!', message: 'Game code copied to clipboard!' });
                 }}
                 className="btn-premium flex-1"
               >

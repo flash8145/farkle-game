@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { GameCodeInput, PlayerNameInput } from '@/components/ui/input';
 import { FormField } from '@/components/ui/label';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/toast-notification';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================
 // JOIN GAME PAGE
@@ -16,7 +17,8 @@ import { useToast } from '@/components/ui/toast';
 export default function JoinGamePage() {
   const router = useRouter();
   const { joinGame, isLoading, error } = useGame();
-  const { success, error: showError } = useToast();
+  const { addToast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   const [gameCode, setGameCode] = React.useState('');
   const [playerName, setPlayerName] = React.useState('');
@@ -24,6 +26,13 @@ export default function JoinGamePage() {
     gameCode: '',
     playerName: '',
   });
+
+  // Auto-fill player name if user is logged in
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      setPlayerName(user.username);
+    }
+  }, [isAuthenticated, user]);
 
   const validateForm = (): boolean => {
     const newErrors = {
@@ -60,10 +69,18 @@ export default function JoinGamePage() {
 
     try {
       await joinGame(gameCode.trim().toUpperCase(), playerName.trim());
-      success('Joined game successfully!');
+      addToast({
+        type: 'success',
+        title: 'Joined Game!',
+        message: 'Successfully joined the game!'
+      });
       router.push('/game');
     } catch (err) {
-      showError('Failed to join game. Please check the game code and try again.');
+      addToast({
+        type: 'error',
+        title: 'Join Failed',
+        message: 'Failed to join game. Please check the game code and try again.'
+      });
       console.error('Join game error:', err);
     }
   };
@@ -147,14 +164,24 @@ export default function JoinGamePage() {
                 label="Your Name"
                 required
                 error={errors.playerName}
-                helperText="This name will be visible to other players"
+                helperText={isAuthenticated ? "Playing as your logged-in account" : "This name will be visible to other players"}
               >
-                <PlayerNameInput
-                  value={playerName}
-                  onChange={handlePlayerNameChange}
-                  placeholder="Enter your name"
-                  disabled={isLoading}
-                />
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium text-green-800 dark:text-green-200">{playerName}</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">(Logged in)</span>
+                  </div>
+                ) : (
+                  <PlayerNameInput
+                    value={playerName}
+                    onChange={handlePlayerNameChange}
+                    placeholder="Enter your name"
+                    disabled={isLoading}
+                  />
+                )}
               </FormField>
 
               {/* API Error Display */}

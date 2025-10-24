@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/toast-notification';
 import { GameStatus } from '@/types/game';
 
 export const GameControls: React.FC = () => {
@@ -15,7 +15,7 @@ export const GameControls: React.FC = () => {
     triggerAITurn, 
     getOpponent 
   } = useGame();
-  const { success, error: showError, info } = useToast();
+  const { addToast } = useToast();
   
   const [showLeaveConfirm, setShowLeaveConfirm] = React.useState(false);
   const [isLeavingGame, setIsLeavingGame] = React.useState(false);
@@ -57,20 +57,20 @@ export const GameControls: React.FC = () => {
         // Wait 1.5 seconds for better UX
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        info('🤖 AI is thinking...');
+        addToast({ type: 'info', title: 'AI Turn', message: '🤖 AI is thinking...' });
         console.log('🤖 Calling triggerAITurn with playerId:', opponent.playerId);
         
         const result = await triggerAITurn(opponent.playerId);
         
         console.log('✅ AI Turn Result:', result);
-        success(`AI scored ${result.pointsScored} points!`);
+        addToast({ type: 'success', title: 'AI Turn Complete', message: `AI scored ${result.pointsScored} points!` });
         
         // Refresh game state after AI turn
         await refreshGameState();
         
       } catch (err) {
         console.error('❌ AI Turn Error:', err);
-        showError('AI turn failed. Please refresh the page.');
+        addToast({ type: 'error', title: 'AI Error', message: 'AI turn failed. Please refresh the page.' });
       } finally {
         setIsAIProcessing(false);
       }
@@ -83,10 +83,10 @@ export const GameControls: React.FC = () => {
     try {
       setIsLeavingGame(true);
       await leaveGame();
-      success('You left the game');
+      addToast({ type: 'success', title: 'Left Game', message: 'You have left the game' });
       router.push('/');
     } catch (err) {
-      showError('Failed to leave game');
+      addToast({ type: 'error', title: 'Leave Failed', message: 'Failed to leave game. Please try again.' });
       setIsLeavingGame(false);
     }
   };
@@ -94,16 +94,16 @@ export const GameControls: React.FC = () => {
   const handleRefresh = async () => {
     try {
       await refreshGameState();
-      success('Game state refreshed');
+      addToast({ type: 'success', title: 'Refreshed', message: 'Game state updated successfully' });
     } catch (err) {
-      showError('Failed to refresh game state');
+      addToast({ type: 'error', title: 'Refresh Failed', message: 'Failed to refresh game state' });
     }
   };
 
   const handleCopyGameCode = () => {
     if (gameState?.gameCode) {
       navigator.clipboard.writeText(gameState.gameCode);
-      success('Game code copied to clipboard!');
+      addToast({ type: 'success', title: 'Copied!', message: 'Game code copied to clipboard!' });
     }
   };
 

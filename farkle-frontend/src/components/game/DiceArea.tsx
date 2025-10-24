@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { DiceValue } from '@/types/game';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/toast-notification';
 import { GameStatus } from '@/types/game';
 
 // ============================================
@@ -160,7 +160,7 @@ export default function DiceArea() {
     diceAnimationState,
     isLoading 
   } = useGame();
-  const { success, error: showError } = useToast();
+  const { addToast } = useToast();
 
   // Get current player
   const currentPlayer = gameState?.players.find(p => p.isCurrentTurn);
@@ -189,36 +189,36 @@ export default function DiceArea() {
 
   const handleRoll = async () => {
     if (!isMyTurn()) {
-      showError('Not your turn!');
+      addToast({ type: 'error', title: 'Not Your Turn', message: 'Wait for your turn to roll!' });
       return;
     }
 
     try {
       await rollDice(availableDice);
-      success('Dice rolled!');
+      addToast({ type: 'success', title: 'Dice Rolled!', message: 'Good luck with your roll!' });
     } catch (err) {
       console.error('Roll error:', err);
-      showError('Failed to roll dice');
+      addToast({ type: 'error', title: 'Roll Failed', message: 'Failed to roll dice. Please try again.' });
     }
   };
 
   const handleBank = async () => {
     if (!isMyTurn()) {
-      showError('Not your turn!');
+      addToast({ type: 'error', title: 'Not Your Turn', message: 'Wait for your turn to bank points!' });
       return;
     }
 
     if (myTurnScore === 0) {
-      showError('No points to bank!');
+      addToast({ type: 'warning', title: 'No Points', message: 'You need to score points before banking!' });
       return;
     }
 
     try {
       await bankPoints();
-      success(`Banked ${myTurnScore} points!`);
+      addToast({ type: 'success', title: 'Points Banked!', message: `Successfully banked ${myTurnScore} points!` });
     } catch (err) {
       console.error('Bank error:', err);
-      showError('Failed to bank points');
+      addToast({ type: 'error', title: 'Banking Failed', message: 'Failed to bank points. Please try again.' });
     }
   };
 

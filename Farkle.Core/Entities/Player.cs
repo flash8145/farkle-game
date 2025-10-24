@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace FarkleGame.Core.Entities
 {
@@ -75,6 +75,16 @@ namespace FarkleGame.Core.Entities
         /// Navigation property to the game
         /// </summary>
         public Game? Game { get; set; }
+
+        /// <summary>
+        /// Foreign key to the user (optional - for registered users)
+        /// </summary>
+        public int? UserId { get; set; }
+
+        /// <summary>
+        /// Navigation property to the user
+        /// </summary>
+        public User? User { get; set; }
 
         /// <summary>
         /// Collection of turns taken by this player

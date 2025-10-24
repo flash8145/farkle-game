@@ -1,4 +1,4 @@
-﻿namespace FarkleGame.API.DTOs
+namespace FarkleGame.API.DTOs
 {
     /// <summary>
     /// Complete game state information
@@ -105,5 +105,15 @@
         /// Is player connected
         /// </summary>
         public bool IsConnected { get; set; }
+
+        /// <summary>
+        /// Is this player an AI
+        /// </summary>
+        public bool IsAI { get; set; }
+
+        /// <summary>
+        /// AI difficulty level (if IsAI is true)
+        /// </summary>
+        public int? AIDifficulty { get; set; }
     }
 }

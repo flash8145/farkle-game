@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using FarkleGame.API.Data;
 using FarkleGame.API.Services;
 
@@ -15,6 +18,36 @@ builder.Services.AddDbContext<FarkleDbContext>(options =>
 builder.Services.AddScoped<IDiceService, DiceService>();
 builder.Services.AddScoped<IAIPlayerService, AIPlayerService>();
 builder.Services.AddScoped<IGameService, GameService>(); // ✅ MUST BE UNCOMMENTED
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// ============================================
+// JWT Authentication Configuration
+// ============================================
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? "YourSuperSecretKeyForFarkleGameThatIsAtLeast32CharactersLong!";
+var issuer = jwtSettings["Issuer"] ?? "FarkleGameAPI";
+var audience = jwtSettings["Audience"] ?? "FarkleGameClient";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 // ============================================
 // CRITICAL: CORS Configuration
@@ -85,6 +118,7 @@ app.UseCors("AllowFrontend");  // ✅ THIS MUST BE HERE, BEFORE UseAuthorization
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

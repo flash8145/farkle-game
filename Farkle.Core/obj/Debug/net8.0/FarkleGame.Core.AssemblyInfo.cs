@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FarkleGame.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e7b92d95b13a5226ced169a8a6daa164b4f3781b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+adae2dca25433048d3b124d48803032b909ff40b")]
 [assembly: System.Reflection.AssemblyProductAttribute("FarkleGame.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FarkleGame.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

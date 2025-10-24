@@ -445,6 +445,10 @@ TestOutput/
 # Local database connection strings (if stored separately)
 ConnectionStrings.config
 
+# Farkle API specific
+farkle.api/bin/
+farkle.api/obj/
+
 # ==============================================================================
 # END OF FILE
 # ==============================================================================

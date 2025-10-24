@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { useToast } from '../ui/toast';
+import { useToast } from '../ui/toast-notification';
 
 // ============================================
 // GAME CODE DISPLAY COMPONENT
@@ -22,7 +22,7 @@ export const GameCodeDisplay: React.FC<GameCodeDisplayProps> = ({
   size = 'md',
   className = '',
 }) => {
-  const { success } = useToast();
+  const { addToast } = useToast();
   const [copied, setCopied] = React.useState(false);
 
   const sizeStyles = {
@@ -49,7 +49,7 @@ export const GameCodeDisplay: React.FC<GameCodeDisplayProps> = ({
     try {
       await navigator.clipboard.writeText(gameCode);
       setCopied(true);
-      success('Game code copied to clipboard!');
+      addToast({ type: 'success', title: 'Copied!', message: 'Game code copied to clipboard!' });
       
       setTimeout(() => {
         setCopied(false);
@@ -171,14 +171,14 @@ export const CompactGameCode: React.FC<CompactGameCodeProps> = ({
   gameCode,
   className = '',
 }) => {
-  const { success } = useToast();
+  const { addToast } = useToast();
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(gameCode);
       setCopied(true);
-      success('Game code copied!');
+      addToast({ type: 'success', title: 'Copied!', message: 'Game code copied!' });
       
       setTimeout(() => {
         setCopied(false);

@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlayerNameInput } from '@/components/ui/input';
 import { FormField } from '@/components/ui/label';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/toast-notification';
+import { useAuth } from '@/contexts/AuthContext';
 import { AIDifficulty } from '@/types/game';
 
 // ============================================
@@ -17,11 +18,19 @@ import { AIDifficulty } from '@/types/game';
 export default function CreateAIGamePage() {
   const router = useRouter();
   const { createAIGame, isLoading, error } = useGame();
-  const { success, error: showError } = useToast();
+  const { addToast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   const [playerName, setPlayerName] = React.useState('');
   const [aiDifficulty, setAiDifficulty] = React.useState<AIDifficulty>(AIDifficulty.Medium);
   const [validationError, setValidationError] = React.useState('');
+
+  // Auto-fill player name if user is logged in
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      setPlayerName(user.username);
+    }
+  }, [isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,10 +54,18 @@ export default function CreateAIGamePage() {
 
     try {
       await createAIGame(playerName.trim(), aiDifficulty);
-      success('AI game created successfully!');
+      addToast({
+        type: 'success',
+        title: 'Game Created!',
+        message: 'AI game created successfully!'
+      });
       router.push('/game');
     } catch (err) {
-      showError('Failed to create AI game. Please try again.');
+      addToast({
+        type: 'error',
+        title: 'Creation Failed',
+        message: 'Failed to create AI game. Please try again.'
+      });
       console.error('Create AI game error:', err);
     }
   };
@@ -130,18 +147,28 @@ export default function CreateAIGamePage() {
                 label="Your Name"
                 required
                 error={validationError}
-                helperText="Choose a name for yourself"
+                helperText={isAuthenticated ? "Playing as your logged-in account" : "Choose a name for yourself"}
               >
-                <PlayerNameInput
-                  value={playerName}
-                  onChange={(e) => {
-                    setPlayerName(e.target.value);
-                    setValidationError('');
-                  }}
-                  placeholder="Enter your name"
-                  disabled={isLoading}
-                  autoFocus
-                />
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium text-green-800 dark:text-green-200">{playerName}</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">(Logged in)</span>
+                  </div>
+                ) : (
+                  <PlayerNameInput
+                    value={playerName}
+                    onChange={(e) => {
+                      setPlayerName(e.target.value);
+                      setValidationError('');
+                    }}
+                    placeholder="Enter your name"
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                )}
               </FormField>
 
               {/* AI Difficulty Selection */}

@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlayerNameInput } from '@/components/ui/input';
 import { FormField } from '@/components/ui/label';
 import { useGame } from '@/contexts/GameContext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/toast-notification';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================
 // CREATE GAME PAGE
@@ -16,10 +17,18 @@ import { useToast } from '@/components/ui/toast';
 export default function CreateGamePage() {
   const router = useRouter();
   const { createGame, isLoading, error } = useGame();
-  const { success, error: showError } = useToast();
+  const { addToast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   const [playerName, setPlayerName] = React.useState('');
   const [validationError, setValidationError] = React.useState('');
+
+  // Auto-fill player name if user is logged in
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      setPlayerName(user.username);
+    }
+  }, [isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +52,18 @@ export default function CreateGamePage() {
 
     try {
       await createGame(playerName.trim());
-      success('Game created successfully!');
+      addToast({
+        type: 'success',
+        title: 'Game Created!',
+        message: 'Multiplayer game created successfully!'
+      });
       router.push('/game');
     } catch (err) {
-      showError('Failed to create game. Please try again.');
+      addToast({
+        type: 'error',
+        title: 'Creation Failed',
+        message: 'Failed to create game. Please try again.'
+      });
       console.error('Create game error:', err);
     }
   };
@@ -100,18 +117,28 @@ export default function CreateGamePage() {
                 label="Your Name"
                 required
                 error={validationError}
-                helperText="This name will be visible to other players"
+                helperText={isAuthenticated ? "Playing as your logged-in account" : "This name will be visible to other players"}
               >
-                <PlayerNameInput
-                  value={playerName}
-                  onChange={(e) => {
-                    setPlayerName(e.target.value);
-                    setValidationError('');
-                  }}
-                  placeholder="Enter your name"
-                  disabled={isLoading}
-                  autoFocus
-                />
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium text-green-800 dark:text-green-200">{playerName}</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">(Logged in)</span>
+                  </div>
+                ) : (
+                  <PlayerNameInput
+                    value={playerName}
+                    onChange={(e) => {
+                      setPlayerName(e.target.value);
+                      setValidationError('');
+                    }}
+                    placeholder="Enter your name"
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                )}
               </FormField>
 
               {/* API Error Display */}

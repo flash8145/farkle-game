@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { useGame } from '@/contexts/GameContext';
-import { Player } from '@/types/game';
+import { Player, GameRules } from '@/types/game';
 
 // ============================================
 // SCOREBOARD COMPONENT
@@ -180,13 +180,13 @@ interface GameProgressProps {
 }
 
 const GameProgress: React.FC<GameProgressProps> = ({ players }) => {
-  const winningScore = 10000;
+  const winningScore = GameRules.WINNING_SCORE;
   const maxScore = Math.max(...players.map(p => p.totalScore), winningScore);
   
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
-        <span>Progress to 10,000</span>
+        <span>Progress to {winningScore.toLocaleString()}</span>
         <span className="font-semibold">Goal: {winningScore.toLocaleString()}</span>
       </div>
 

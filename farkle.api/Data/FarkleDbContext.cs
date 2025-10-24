@@ -1,4 +1,4 @@
-﻿using FarkleGame.Core.Entities;
+using FarkleGame.Core.Entities;
 using FarkleGame.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -31,6 +31,11 @@ namespace FarkleGame.API.Data
         /// Turns table
         /// </summary>
         public DbSet<Turn> Turns { get; set; }
+
+        /// <summary>
+        /// Users table
+        /// </summary>
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -180,6 +185,73 @@ namespace FarkleGame.API.Data
 
                 // Composite index for game and turn number
                 entity.HasIndex(t => new { t.GameId, t.TurnNumber });
+            });
+
+            #endregion
+
+            #region User Configuration
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(u => u.Id);
+
+                entity.Property(u => u.Username)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(u => u.Email)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(u => u.PasswordHash)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(u => u.FirstName)
+                    .HasMaxLength(100);
+
+                entity.Property(u => u.LastName)
+                    .HasMaxLength(100);
+
+                entity.Property(u => u.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(u => u.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
+
+                entity.Property(u => u.IsEmailVerified)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(u => u.GamesPlayed)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                entity.Property(u => u.GamesWon)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                entity.Property(u => u.TotalScore)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                entity.Property(u => u.HighestScore)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                // Unique constraints
+                entity.HasIndex(u => u.Username)
+                    .IsUnique();
+
+                entity.HasIndex(u => u.Email)
+                    .IsUnique();
+
+                // One User has many Players
+                entity.HasMany(u => u.Players)
+                    .WithOne(p => p.User)
+                    .HasForeignKey(p => p.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             #endregion

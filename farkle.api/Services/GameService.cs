@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using FarkleGame.API.Data;
 using FarkleGame.API.DTOs;
 using FarkleGame.API.Models;
@@ -494,7 +494,9 @@ namespace FarkleGame.API.Services
                     IsOnBoard = p.IsOnBoard,
                     IsCurrentTurn = p.IsCurrentTurn,
                     TurnOrder = p.TurnOrder,
-                    IsConnected = p.IsConnected
+                    IsConnected = p.IsConnected,
+                    IsAI = p.IsAI,
+                    AIDifficulty = p.IsAI ? (int?)p.AIDifficulty : null
                 }).ToList(),
                 CurrentPlayer = currentPlayer != null ? new GamePlayerInfo
                 {
@@ -505,7 +507,9 @@ namespace FarkleGame.API.Services
                     IsOnBoard = currentPlayer.IsOnBoard,
                     IsCurrentTurn = currentPlayer.IsCurrentTurn,
                     TurnOrder = currentPlayer.TurnOrder,
-                    IsConnected = currentPlayer.IsConnected
+                    IsConnected = currentPlayer.IsConnected,
+                    IsAI = currentPlayer.IsAI,
+                    AIDifficulty = currentPlayer.IsAI ? (int?)currentPlayer.AIDifficulty : null
                 } : null,
                 AvailableDice = game.AvailableDice,
                 Winner = winner != null ? new GamePlayerInfo
@@ -517,7 +521,9 @@ namespace FarkleGame.API.Services
                     IsOnBoard = winner.IsOnBoard,
                     IsCurrentTurn = winner.IsCurrentTurn,
                     TurnOrder = winner.TurnOrder,
-                    IsConnected = winner.IsConnected
+                    IsConnected = winner.IsConnected,
+                    IsAI = winner.IsAI,
+                    AIDifficulty = winner.IsAI ? (int?)winner.AIDifficulty : null
                 } : null,
                 CreatedAt = game.CreatedAt,
                 StartedAt = game.StartedAt,

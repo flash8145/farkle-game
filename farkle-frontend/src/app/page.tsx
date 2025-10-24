@@ -3,13 +3,50 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { GameRules } from '@/types/game';
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const [showRules, setShowRules] = React.useState(false);
+  const [showProfile, setShowProfile] = React.useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
+      {/* Top Navigation */}
+      <div className="fixed top-4 right-4 z-40">
+        {isLoading ? (
+          <div className="w-12 h-12 glass-card rounded-full flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
+        ) : isAuthenticated && user ? (
+          <button
+            onClick={() => setShowProfile(true)}
+            className="w-12 h-12 bg-gradient-to-br from-purple-500 to-amber-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform duration-200 shadow-lg hover:shadow-xl"
+          >
+            <span className="text-lg font-bold text-white">
+              {user.displayName.charAt(0).toUpperCase()}
+            </span>
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/auth/signin')}
+              className="glass-card rounded-full px-4 py-2 hover:bg-white/10 transition-all text-sm text-white font-medium"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => router.push('/auth/signup')}
+              className="btn-premium rounded-full px-4 py-2 text-sm"
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="w-full max-w-6xl">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
@@ -181,18 +218,144 @@ export default function HomePage() {
           <div className="space-y-2">
             <div className="text-3xl">🏆</div>
             <div className="font-semibold text-white">Competitive</div>
-            <div className="text-sm text-gray-400">First to 10,000</div>
+            <div className="text-sm text-gray-400">First to 5,000</div>
           </div>
         </div>
 
+
         {/* Footer */}
-        <div className="mt-12 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-gray-500">
           <p>Built with Next.js & .NET</p>
         </div>
       </div>
 
       {/* Rules Modal */}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      
+      {/* Profile Modal */}
+      {showProfile && isAuthenticated && user && (
+        <ProfileModal user={user} onClose={() => setShowProfile(false)} onLogout={logout} router={router} />
+      )}
+    </div>
+  );
+}
+
+// Profile Modal Component
+interface ProfileModalProps {
+  user: any;
+  onClose: () => void;
+  onLogout: () => void;
+  router: any;
+}
+
+function ProfileModal({ user, onClose, onLogout, router }: ProfileModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className="glass-card rounded-3xl w-full max-w-md animate-bounce-in" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <h2 className="text-2xl font-bold text-white">Profile</h2>
+          <button 
+            onClick={onClose} 
+            className="w-8 h-8 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <div className="text-center mb-6">
+            {/* Avatar */}
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl font-bold text-white">
+                {user.displayName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            
+            {/* User Info */}
+            <h3 className="text-xl font-bold text-white mb-1">{user.displayName}</h3>
+            <p className="text-gray-400 text-sm">@{user.username}</p>
+          </div>
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="text-center">
+              <div className="text-lg font-bold text-purple-400">{user.gamesPlayed}</div>
+              <div className="text-xs text-gray-400">Games</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-amber-400">{user.gamesWon}</div>
+              <div className="text-xs text-gray-400">Wins</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-emerald-400">{user.highestScore.toLocaleString()}</div>
+              <div className="text-xs text-gray-400">Best Score</div>
+            </div>
+          </div>
+          
+          {/* Win Rate */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-400">Win Rate</span>
+              <span className="text-white font-semibold">{user.winRate.toFixed(1)}%</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-amber-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(user.winRate, 100)}%` }}
+              />
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                router.push('/game');
+                onClose();
+              }}
+              className="btn-premium w-full py-3 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-10 5a7 7 0 1114 0H3z" />
+              </svg>
+              Play Game
+            </button>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  // TODO: Add settings/profile edit functionality
+                  onClose();
+                }}
+                className="glass-card rounded-xl px-4 py-2 hover:bg-white/10 transition-all text-sm text-gray-300 hover:text-white flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </button>
+              
+              <button
+                onClick={() => {
+                  onLogout();
+                  onClose();
+                }}
+                className="glass-card rounded-xl px-4 py-2 hover:bg-red-500/20 transition-all text-sm text-gray-300 hover:text-red-400 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -216,22 +379,22 @@ function RulesModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 space-y-6 text-gray-300">
           <div>
             <h3 className="text-xl font-bold text-white mb-3">🎯 Objective</h3>
-            <p>Be the first player to reach 10,000 points!</p>
+            <p>Be the first player to reach {GameRules.WINNING_SCORE.toLocaleString()} points!</p>
           </div>
 
           <div>
             <h3 className="text-xl font-bold text-white mb-3">🎲 Scoring</h3>
             <ul className="space-y-2">
-              <li>• Single 1 = 100 points</li>
-              <li>• Single 5 = 50 points</li>
-              <li>• Three 1s = 1,000 points</li>
-              <li>• Three 2s = 200 points</li>
-              <li>• Three 3s = 300 points</li>
-              <li>• Three 4s = 400 points</li>
-              <li>• Three 5s = 500 points</li>
-              <li>• Three 6s = 600 points</li>
-              <li>• Straight (1-2-3-4-5-6) = 1,500 points</li>
-              <li>• Three Pairs = 1,500 points</li>
+              <li>• Single 1 = {GameRules.SINGLE_ONE_POINTS} points</li>
+              <li>• Single 5 = {GameRules.SINGLE_FIVE_POINTS} points</li>
+              <li>• Three 1s = {GameRules.THREE_ONES_POINTS.toLocaleString()} points</li>
+              <li>• Three 2s = {(2 * GameRules.THREE_OF_A_KIND_MULTIPLIER)} points</li>
+              <li>• Three 3s = {(3 * GameRules.THREE_OF_A_KIND_MULTIPLIER)} points</li>
+              <li>• Three 4s = {(4 * GameRules.THREE_OF_A_KIND_MULTIPLIER)} points</li>
+              <li>• Three 5s = {(5 * GameRules.THREE_OF_A_KIND_MULTIPLIER)} points</li>
+              <li>• Three 6s = {(6 * GameRules.THREE_OF_A_KIND_MULTIPLIER)} points</li>
+              <li>• Straight (1-2-3-4-5-6) = {GameRules.STRAIGHT_POINTS.toLocaleString()} points</li>
+              <li>• Three Pairs = {GameRules.THREE_PAIRS_POINTS.toLocaleString()} points</li>
             </ul>
           </div>
 
@@ -243,7 +406,7 @@ function RulesModal({ onClose }: { onClose: () => void }) {
               <li>Choose to bank points or roll remaining dice</li>
               <li>If you roll no scoring dice, you &quot;Farkle&quot; and lose turn points</li>
               <li>If all dice score (Hot Dice), roll all 6 again!</li>
-              <li>Must score 500+ points to get &quot;on the board&quot;</li>
+              <li>Must score {GameRules.MINIMUM_SCORE_TO_GET_ON_BOARD}+ points to get &quot;on the board&quot;</li>
             </ol>
           </div>
 
