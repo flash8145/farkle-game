@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { updateGameStatistics } from '@/lib/auth-utils';
+import { updateGameStatistics, isTokenExpired } from '@/lib/auth-utils';
 
 interface User {
   id: number;
@@ -42,9 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (storedToken && storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
+        // Check if token is expired
+        if (isTokenExpired(storedToken)) {
+          console.warn('Stored token has expired, logging out');
+          localStorage.removeItem('farkle_token');
+          localStorage.removeItem('farkle_user');
+        } else {
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+        }
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         // Clear invalid data
@@ -77,7 +84,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateGameStats = async (won: boolean, score: number): Promise<boolean> => {
     try {
+      // Check if token is expired before making the API call
+      const currentToken = localStorage.getItem('farkle_token');
+      if (currentToken && isTokenExpired(currentToken)) {
+        console.warn('Token expired, logging out');
+        logout();
+        return false;
+      }
+
       const result = await updateGameStatistics(won, score);
+      
+      // Handle 401 Unauthorized - token might have expired during the call
+      if (!result.success && result.message?.includes('401')) {
+        console.warn('Received 401 error, token may have expired');
+        logout();
+        return false;
+      }
+      
       if (result.success && result.user) {
         updateUser(result.user);
         return true;

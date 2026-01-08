@@ -5,6 +5,54 @@ export interface ValidationResult {
   message?: string;
 }
 
+// Token expiration utility
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    // JWT tokens have 3 parts separated by dots
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return true; // Invalid token format
+    }
+
+    // Decode the payload (second part)
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Check if exp claim exists
+    if (!payload.exp) {
+      return true; // No expiration claim
+    }
+
+    // exp is in seconds, Date.now() is in milliseconds
+    const expirationTime = payload.exp * 1000;
+    const currentTime = Date.now();
+    
+    // Add a 1-minute buffer to refresh before actual expiration
+    return currentTime >= (expirationTime - 60000);
+  } catch (error) {
+    console.error('Error checking token expiration:', error);
+    return true; // Treat invalid tokens as expired
+  }
+};
+
+export const getTokenExpirationTime = (token: string): Date | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) {
+      return null;
+    }
+
+    return new Date(payload.exp * 1000);
+  } catch (error) {
+    console.error('Error getting token expiration:', error);
+    return null;
+  }
+};
+
 export const validateEmail = (email: string): ValidationResult => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
@@ -151,16 +199,6 @@ export const signIn = async (email: string, password: string, rememberMe: boolea
       }),
     });
 
-    // Check if response is ok and has JSON content
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Auth API error:', response.status, errorText);
-      return { 
-        success: false, 
-        message: `Server error (${response.status}): ${response.statusText}`
-      };
-    }
-
     // Check if response has JSON content
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -173,6 +211,20 @@ export const signIn = async (email: string, password: string, rememberMe: boolea
     }
 
     const result: AuthResponse = await response.json();
+
+    // Handle unsuccessful responses (including 400 for invalid credentials)
+    if (!response.ok) {
+      // 400 errors are expected user errors (invalid credentials, validation failures)
+      // Only log as error for server errors (500+)
+      if (response.status >= 500) {
+        console.error('Auth API server error:', response.status, result.message);
+      }
+      
+      return { 
+        success: false, 
+        message: result.message || `Authentication failed (${response.status})`
+      };
+    }
 
     if (result.success && result.data) {
       // Store token in localStorage
@@ -217,16 +269,6 @@ export const signUp = async (userData: {
       body: JSON.stringify(userData),
     });
 
-    // Check if response is ok and has JSON content
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Auth API error:', response.status, errorText);
-      return { 
-        success: false, 
-        message: `Server error (${response.status}): ${response.statusText}`
-      };
-    }
-
     // Check if response has JSON content
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -239,6 +281,20 @@ export const signUp = async (userData: {
     }
 
     const result: AuthResponse = await response.json();
+
+    // Handle unsuccessful responses (including 400 for validation errors)
+    if (!response.ok) {
+      // 400 errors are expected user errors (validation failures, duplicate email/username)
+      // Only log as error for server errors (500+)
+      if (response.status >= 500) {
+        console.error('Auth API server error:', response.status, result.message);
+      }
+      
+      return { 
+        success: false, 
+        message: result.message || `Registration failed (${response.status})`
+      };
+    }
 
     if (result.success && result.data) {
       // Store token in localStorage
@@ -276,6 +332,14 @@ export const updateGameStatistics = async (won: boolean, score: number): Promise
       };
     }
 
+    // Check if token is expired before making the request
+    if (isTokenExpired(token)) {
+      return {
+        success: false,
+        message: 'Session expired (401). Please log in again.'
+      };
+    }
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5186/api'}/auth/update-game-stats`, {
       method: 'POST',
       headers: {
@@ -292,6 +356,15 @@ export const updateGameStatistics = async (won: boolean, score: number): Promise
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Update stats API error:', response.status, errorText);
+      
+      // Special handling for 401 Unauthorized
+      if (response.status === 401) {
+        return {
+          success: false,
+          message: 'Session expired (401). Please log in again.'
+        };
+      }
+      
       return { 
         success: false, 
         message: `Server error (${response.status}): ${response.statusText}`

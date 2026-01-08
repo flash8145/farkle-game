@@ -449,6 +449,10 @@ ConnectionStrings.config
 farkle.api/bin/
 farkle.api/obj/
 
+# Farkle core specific
+farkle.core/bin/
+farkle.core/obj/
+
 # ==============================================================================
 # END OF FILE
 # ==============================================================================

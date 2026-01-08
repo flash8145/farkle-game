@@ -105,6 +105,14 @@ export default function GamePage() {
               console.log('Game statistics updated successfully');
             } else {
               console.error('Failed to update game statistics');
+              // Check if user is still authenticated (might have been logged out due to expired token)
+              if (!isAuthenticated) {
+                addToast({ 
+                  type: 'warning', 
+                  title: 'Session Expired', 
+                  message: 'Your session has expired. Please log in again to save your game statistics.' 
+                });
+              }
             }
           });
         }
